@@ -90,11 +90,7 @@ export class ImagesService {
   }
 
   async findAll(): Promise<Image[]> {
-    const images = await this.imageModel.find();
-    if (images.length == 0) {
-      throw new NotFoundException('Images not found');
-    }
-    return images;
+    return await this.imageModel.find();
   }
 
   async updateImage(imageId: string, updateImageDto: UpdateImageDto): Promise<Image> {
