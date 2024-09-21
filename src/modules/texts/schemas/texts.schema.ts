@@ -15,8 +15,8 @@ export class Text {
   @Prop({ type: String })
   title: string;
 
-  @Prop({ type: String })
-  body: string;
+  @Prop({ type: String, required: false })
+  body?: string;
 
   @Prop({ type: Number })
   max_length: number;
