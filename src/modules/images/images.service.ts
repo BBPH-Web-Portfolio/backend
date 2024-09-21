@@ -30,7 +30,7 @@ export class ImagesService {
 
     const newImage = new this.imageModel({
       url: uploadResult.url,
-      cloudinaryPublicId: uploadResult.public_id,
+      cloudinary_public_id: uploadResult.public_id,
       width: uploadResult.width,
       height: uploadResult.height,
       category,
@@ -63,14 +63,14 @@ export class ImagesService {
     if (uploadResult && uploadResult.url) {
       try {
         await this.cloudinaryService.deleteImageFromCloudinary(
-          existingImage.cloudinaryPublicId,
+          existingImage.cloudinary_public_id,
         );
       } catch (error) {
         console.error('Failed to delete old image from Cloudinary:', error);
       }
 
       existingImage.url = uploadResult.secure_url;
-      existingImage.cloudinaryPublicId = uploadResult.public_id;
+      existingImage.cloudinary_public_id = uploadResult.public_id;
       existingImage.width = uploadResult.width;
       existingImage.height = uploadResult.height;
       await existingImage.save();
@@ -87,6 +87,14 @@ export class ImagesService {
       throw new NotFoundException(`Image with ID ${imageId} not found`);
     }
     return image;
+  }
+
+  async findAll(): Promise<Image[]> {
+    const images = await this.imageModel.find();
+    if (images.length == 0) {
+      throw new NotFoundException('Images not found');
+    }
+    return images;
   }
 
   async updateImage(imageId: string, updateImageDto: UpdateImageDto): Promise<Image> {
@@ -112,7 +120,7 @@ export class ImagesService {
     }
 
     try {
-      await this.cloudinaryService.deleteImageFromCloudinary(image.cloudinaryPublicId);
+      await this.cloudinaryService.deleteImageFromCloudinary(image.cloudinary_public_id);
     } catch (error) {
       throw new InternalServerErrorException('Failed to delete image from Cloudinary');
     }

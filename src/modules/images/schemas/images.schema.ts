@@ -21,7 +21,7 @@ export class Image {
   height: number;
 
   @Prop()
-  cloudinaryPublicId: string;
+  cloudinary_public_id: string;
 }
 
 export const ImageSchema = SchemaFactory.createForClass(Image);
