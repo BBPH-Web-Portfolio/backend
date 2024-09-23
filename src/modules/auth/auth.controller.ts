@@ -10,7 +10,7 @@ import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 
-@UseGuards(AuthGuard)
+// @UseGuards(AuthGuard)
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
