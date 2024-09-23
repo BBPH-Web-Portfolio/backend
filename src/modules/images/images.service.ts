@@ -47,8 +47,8 @@ export class ImagesService {
     if (existingImage.width && existingImage.height) {
       const { width, height } =
         await this.cloudinaryService.getImageDimensions(file);
-      if (width > existingImage.width || height > existingImage.height) {
-        throw new BadRequestException('New image dimensions exceed the allowed size');
+      if (width != existingImage.width || height != existingImage.height) {
+        throw new BadRequestException('New image dimensions do not match the required size');
       }
     }
 
