@@ -31,6 +31,11 @@ export class ImagesController {
     return await this.imagesService.uploadAndReplaceImage(id, file);
   }
 
+  @Get()
+  async findAll(): Promise<Image[]> {
+    return this.imagesService.findAll();
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Image> {
     return this.imagesService.findOne(id);
