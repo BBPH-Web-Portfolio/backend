@@ -101,10 +101,10 @@ export class ImagesService {
 
     const { category, alt, width, height } = updateImageDto;
 
-    if (category) image.category = category;
-    if (alt) image.alt = alt;
-    if (width) image.width = width;
-    if (height) image.height = height;
+    if (category !== undefined) image.category = category;
+    if (alt !== undefined) image.alt = alt;
+    if (width !== undefined) image.width = width;
+    if (height !== undefined) image.height = height;
 
     return await image.save();
   }
