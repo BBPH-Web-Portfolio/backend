@@ -28,7 +28,7 @@ export class CloudinaryService {
 
   async getImageDimensions( file: any ): Promise<{ width: number; height: number }> {
     const sharp = require('sharp');
-    const metadata = await sharp(file).metadata();
+    const metadata = await sharp(file.buffer).metadata();
     return { width: metadata.width, height: metadata.height };
   }
 }
