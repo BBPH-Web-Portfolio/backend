@@ -11,6 +11,10 @@ interface IEnvVars {
 
   SIGN_IN_USERNAME: string;
   SIGN_IN_PASSWORD: string;
+
+  CLOUDINARY_CLOUD_NAME: string;
+  CLOUDINARY_API_KEY: string;
+  CLOUDINARY_API_SECRET: string;
 }
 
 const envsSchema = joi
@@ -24,6 +28,10 @@ const envsSchema = joi
 
     SIGN_IN_USERNAME: joi.string().required(),
     SIGN_IN_PASSWORD: joi.string().required(),
+
+    CLOUDINARY_CLOUD_NAME: joi.string().required(),
+    CLOUDINARY_API_KEY: joi.string().required(),
+    CLOUDINARY_API_SECRET: joi.string().required(),
   })
   .unknown(true);
 
@@ -45,4 +53,8 @@ export const envs = {
 
   signInUsername: envVars.SIGN_IN_USERNAME,
   signInPassword: envVars.SIGN_IN_PASSWORD,
+
+  cloudinaryCloudName: envVars.CLOUDINARY_CLOUD_NAME,
+  cloudinaryKey: envVars.CLOUDINARY_API_KEY,
+  cloudinarySecret: envVars.CLOUDINARY_API_SECRET,
 };
