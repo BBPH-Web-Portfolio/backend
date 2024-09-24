@@ -1,4 +1,11 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateTextDto } from './create-text.dto';
+import { IsString, IsOptional, IsNumber } from 'class-validator';
 
-export class UpdateTextDto extends PartialType(CreateTextDto) {}
+export class UpdateTextDto {
+  @IsString()
+  @IsOptional()
+  title?: string;
+
+  @IsString()
+  @IsOptional()
+  body?: string;
+}
