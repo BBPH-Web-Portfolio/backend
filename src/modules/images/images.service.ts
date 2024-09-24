@@ -13,8 +13,11 @@ export class ImagesService {
     private cloudinaryService: CloudinaryService,
   ) {}
 
-  async uploadImage(file: Express.Multer.File, createImageDto: CreateImageDto): Promise<Image> {
-    const { category, alt } = createImageDto;
+  async uploadImage(
+    file: Express.Multer.File,
+    createImageDto: CreateImageDto,
+  ): Promise<Image> {
+    const { section, subsection, alt, link } = createImageDto;
 
     if (!file) {
       throw new BadRequestException('Image file is required');
@@ -24,61 +27,23 @@ export class ImagesService {
     try {
       uploadResult = await this.cloudinaryService.uploadImageToCloudinary(file);
     } catch (error) {
-      console.log(error)
-      throw new InternalServerErrorException('Failed to upload image to Cloudinary');
+      throw new InternalServerErrorException(
+        'Failed to upload image to Cloudinary',
+      );
     }
 
     const newImage = new this.imageModel({
-      url: uploadResult.url,
+      url: uploadResult.secure_url,
       cloudinary_public_id: uploadResult.public_id,
       width: uploadResult.width,
       height: uploadResult.height,
-      category,
+      section,
+      subsection,
       alt,
+      link,
     });
 
     return await newImage.save();
-  }
-
-  async uploadAndReplaceImage(imageId: string, file: Express.Multer.File): Promise<Image> {
-    const existingImage = await this.imageModel.findById(imageId);
-    if (!existingImage) throw new NotFoundException('Image not found');
-
-    if (existingImage.width && existingImage.height) {
-      const { width, height } =
-        await this.cloudinaryService.getImageDimensions(file);
-      if (width != existingImage.width || height != existingImage.height) {
-        throw new BadRequestException('New image dimensions do not match the required size');
-      }
-    }
-
-    let uploadResult;
-    try {
-      uploadResult = await this.cloudinaryService.uploadImageToCloudinary(file);
-    } catch (error) {
-        console.log(error);
-      throw new InternalServerErrorException('Failed to upload new image to Cloudinary');
-    }
-
-    if (uploadResult && uploadResult.url) {
-      try {
-        await this.cloudinaryService.deleteImageFromCloudinary(
-          existingImage.cloudinary_public_id,
-        );
-      } catch (error) {
-        console.error('Failed to delete old image from Cloudinary:', error);
-      }
-
-      existingImage.url = uploadResult.secure_url;
-      existingImage.cloudinary_public_id = uploadResult.public_id;
-      existingImage.width = uploadResult.width;
-      existingImage.height = uploadResult.height;
-      await existingImage.save();
-
-      return existingImage;
-    } else {
-      throw new InternalServerErrorException('Upload result from Cloudinary is invalid');
-    }
   }
 
   async findOne(imageId: string): Promise<Image> {
@@ -93,20 +58,66 @@ export class ImagesService {
     return await this.imageModel.find();
   }
 
-  async updateImage(imageId: string, updateImageDto: UpdateImageDto): Promise<Image> {
-    const image = await this.imageModel.findById(imageId);
-    if (!image) {
+  async updateImage(imageId: string, file?: Express.Multer.File, updateImageDto?: UpdateImageDto): Promise<Image> {
+    const { section, subsection, alt, width, height, link } = updateImageDto || {};
+
+    const existingImage = await this.imageModel.findById(imageId);
+    if (!existingImage)
       throw new NotFoundException(`Image with ID ${imageId} not found`);
+
+    if (file) {
+      if ((existingImage.width && existingImage.height) && (width != 0 && height != 0)) {
+        const { width: fileWidth, height: fileHeight } =
+          await this.cloudinaryService.getImageDimensions(file);
+        if (
+          fileWidth != existingImage.width ||
+          fileHeight != existingImage.height
+        ) {
+          throw new BadRequestException(
+            'New image dimensions do not match the required size',
+          );
+        }
+      }
+
+      let uploadResult;
+      try {
+        uploadResult =
+          await this.cloudinaryService.uploadImageToCloudinary(file);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Failed to upload new image to Cloudinary',
+        );
+      }
+
+      if (uploadResult && uploadResult.url) {
+        try {
+          await this.cloudinaryService.deleteImageFromCloudinary(
+            existingImage.cloudinary_public_id,
+          );
+        } catch (error) {
+          console.error('Failed to delete old image from Cloudinary:', error);
+        }
+
+        existingImage.url = uploadResult.secure_url;
+        existingImage.cloudinary_public_id = uploadResult.public_id;
+        existingImage.width = uploadResult.width;
+        existingImage.height = uploadResult.height;
+      } else {
+        throw new InternalServerErrorException(
+          'Upload result from Cloudinary is invalid',
+        );
+      }
+    } else {
+        if (width !== undefined) existingImage.width = width;
+        if (height !== undefined) existingImage.height = height;
     }
 
-    const { category, alt, width, height } = updateImageDto;
+    if (section !== undefined) existingImage.section = section;
+    if (subsection !== undefined) existingImage.subsection = subsection;
+    if (alt !== undefined) existingImage.alt = alt;
+    if (link !== undefined) existingImage.link = link;
 
-    if (category !== undefined) image.category = category;
-    if (alt !== undefined) image.alt = alt;
-    if (width !== undefined) image.width = width;
-    if (height !== undefined) image.height = height;
-
-    return await image.save();
+    return await existingImage.save();
   }
 
   async deleteImage(imageId: string): Promise<Image> {
@@ -116,9 +127,13 @@ export class ImagesService {
     }
 
     try {
-      await this.cloudinaryService.deleteImageFromCloudinary(image.cloudinary_public_id);
+      await this.cloudinaryService.deleteImageFromCloudinary(
+        image.cloudinary_public_id,
+      );
     } catch (error) {
-      throw new InternalServerErrorException('Failed to delete image from Cloudinary');
+      throw new InternalServerErrorException(
+        'Failed to delete image from Cloudinary',
+      );
     }
 
     return await this.imageModel.findByIdAndDelete(imageId);
