@@ -9,7 +9,10 @@ export class Image {
   url: string;
 
   @Prop({ required: true })
-  category: string;
+  section: string;
+
+  @Prop({ required: true })
+  subsection: string;
 
   @Prop({ required: true })
   alt: string;
@@ -20,8 +23,11 @@ export class Image {
   @Prop({ required: true })
   height: number;
 
-  @Prop()
+  @Prop({ required: true })
   cloudinary_public_id: string;
+
+  @Prop()
+  link: string;
 }
 
 export const ImageSchema = SchemaFactory.createForClass(Image);
