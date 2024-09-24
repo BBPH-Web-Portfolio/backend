@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import {
   IsEnum,
   IsNotEmpty,
@@ -18,13 +19,23 @@ export class CreateTextDto {
 
   @IsString()
   @IsNotEmpty()
-  title: string;
+  subsection: string;
+
+  @IsString()
+  @IsOptional()
+  title?: string;
 
   @IsString()
   @IsOptional()
   body?: string;
 
+  @Transform(({ value }) => parseInt(value))
   @IsNumber()
   @IsNotEmpty()
-  max_length: number;
+  max_length_title: number;
+
+  @Transform(({ value }) => parseInt(value))
+  @IsNumber()
+  @IsNotEmpty()
+  max_length_body: number;
 }
