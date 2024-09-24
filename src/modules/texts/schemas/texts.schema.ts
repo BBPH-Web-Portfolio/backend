@@ -13,13 +13,19 @@ export class Text {
   section: string;
 
   @Prop({ type: String })
+  subsection: string;
+
+  @Prop({ type: String })
   title: string;
 
   @Prop({ type: String, required: false })
   body?: string;
 
   @Prop({ type: Number })
-  max_length: number;
+  max_length_title: number;
+
+  @Prop({ type: Number })
+  max_length_body: number;
 }
 
 export const TextSchema = SchemaFactory.createForClass(Text);
