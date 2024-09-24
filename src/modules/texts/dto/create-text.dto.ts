@@ -31,11 +31,11 @@ export class CreateTextDto {
 
   @Transform(({ value }) => parseInt(value))
   @IsNumber()
-  @IsNotEmpty()
-  max_length_title: number;
+  @IsOptional()
+  max_length_title?: number;
 
   @Transform(({ value }) => parseInt(value))
   @IsNumber()
-  @IsNotEmpty()
-  max_length_body: number;
+  @IsOptional()
+  max_length_body?: number;
 }

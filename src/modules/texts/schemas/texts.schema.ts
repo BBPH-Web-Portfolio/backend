@@ -18,7 +18,7 @@ export class Text {
   @Prop({ type: String })
   title: string;
 
-  @Prop({ type: String, required: false })
+  @Prop({ type: String })
   body?: string;
 
   @Prop({ type: Number })
