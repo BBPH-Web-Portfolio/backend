@@ -7,7 +7,7 @@ export class CloudinaryService {
   async uploadImageToCloudinary(file: any): Promise<any> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { resource_type: 'image' },
+        { resource_type: 'image', quality: 'auto' },
         (error, result) => {
           if (error) return reject(error);
           resolve(result);

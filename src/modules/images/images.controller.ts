@@ -8,7 +8,6 @@ import {
   Body,
   UploadedFile,
   UseInterceptors,
-  BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -23,19 +22,24 @@ export class ImagesController {
 
   @Post()
   @UseInterceptors(FileInterceptor('file'))
-  async uploadImage(
+  async createImage(
     @UploadedFile() file: Express.Multer.File,
     @Body() createImageDto: CreateImageDto,
   ): Promise<Image> {
     if (!file) {
       throw new NotFoundException('File is required');
     }
-    return this.imagesService.uploadImage(file, createImageDto);
+    return this.imagesService.createImage(file, createImageDto);
   }
 
   @Get()
   async findAll(): Promise<Image[]> {
     return this.imagesService.findAll();
+  }
+
+  @Get('section/:section')
+  async getImagesBySection(@Param('section') section: string): Promise<Image[]> {
+    return await this.imagesService.findImagesBySection(section);
   }
 
   @Get(':id')
