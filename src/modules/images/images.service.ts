@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { Image, ImageDocument } from './schemas/images.schema';
 import { CreateImageDto } from './dto/create-image.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
@@ -63,8 +63,8 @@ export class ImagesService {
     return await this.imageModel.find({ section }).exec();
   }
 
-  async findAll(): Promise<Image[]> {
-    return await this.imageModel.find();
+  async findAll(filter: FilterQuery<ImageDocument> = {}): Promise<Image[]> {
+    return await this.imageModel.find(filter);
   }
 
   async updateImage(imageId: string, file?: Express.Multer.File, updateImageDto?: UpdateImageDto): Promise<Image> {
