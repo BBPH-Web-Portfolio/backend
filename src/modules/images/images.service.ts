@@ -5,6 +5,7 @@ import { Image, ImageDocument } from './schemas/images.schema';
 import { CreateImageDto } from './dto/create-image.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { CloudinaryService } from './cloudinary.service';
+import { envs } from 'src/config/envs';
 
 @Injectable()
 export class ImagesService {
@@ -13,7 +14,7 @@ export class ImagesService {
     private cloudinaryService: CloudinaryService,
   ) {}
 
-  async uploadImage(
+  async createImage(
     file: Express.Multer.File,
     createImageDto: CreateImageDto,
   ): Promise<Image> {
@@ -22,6 +23,10 @@ export class ImagesService {
     if (!file) {
       throw new BadRequestException('Image file is required');
     }
+
+    if (file.size > envs.maxFileSize) {
+    throw new BadRequestException('File size exceeds the limit');
+  }
 
     let uploadResult;
     try {
@@ -52,6 +57,10 @@ export class ImagesService {
       throw new NotFoundException(`Image with ID ${imageId} not found`);
     }
     return image;
+  }
+
+  async findImagesBySection(section: string): Promise<Image[]> {
+    return await this.imageModel.find({ section }).exec();
   }
 
   async findAll(): Promise<Image[]> {

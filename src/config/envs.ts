@@ -15,6 +15,8 @@ interface IEnvVars {
   CLOUDINARY_CLOUD_NAME: string;
   CLOUDINARY_API_KEY: string;
   CLOUDINARY_API_SECRET: string;
+
+  MAX_FILE_SIZE: number;
 }
 
 const envsSchema = joi
@@ -32,6 +34,8 @@ const envsSchema = joi
     CLOUDINARY_CLOUD_NAME: joi.string().required(),
     CLOUDINARY_API_KEY: joi.string().required(),
     CLOUDINARY_API_SECRET: joi.string().required(),
+
+    MAX_FILE_SIZE: joi.number().required(),
   })
   .unknown(true);
 
@@ -57,4 +61,6 @@ export const envs = {
   cloudinaryCloudName: envVars.CLOUDINARY_CLOUD_NAME,
   cloudinaryKey: envVars.CLOUDINARY_API_KEY,
   cloudinarySecret: envVars.CLOUDINARY_API_SECRET,
+
+  maxFileSize: envVars.MAX_FILE_SIZE
 };
