@@ -9,12 +9,16 @@ import {
   NotFoundException,
   InternalServerErrorException,
   Delete,
+  Patch,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
-import { CreateImageDto } from '../images/dto/create-image.dto';
 import { Image } from '../images/schemas/images.schema';
+import { CreateImageInCategoryDto } from './dto/create-image-in-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
+import { Category } from './schemas/category.schema';
 
 @Controller('categories')
 export class CategoriesController {
@@ -30,10 +34,14 @@ export class CategoriesController {
   async addImageToCategory(
     @Param('title') title: string,
     @UploadedFile() file: Express.Multer.File,
-    @Body() createImageDto: CreateImageDto,
-  ) {
+    @Body() createImageInCategoryDto: CreateImageInCategoryDto,
+  ): Promise<Image> {
     try {
-      return await this.categoriesService.addImageToCategory(title, file, createImageDto);
+      return await this.categoriesService.addImageToCategory(
+        title,
+        file,
+        createImageInCategoryDto,
+      );
     } catch (error) {
       throw new InternalServerErrorException(
         `Error while adding image to category "${title}": ${error.message}`,
@@ -42,12 +50,15 @@ export class CategoriesController {
   }
 
   @Get(':title')
-  async getCategoryByTitle(@Param('title') title: string) {
-    const category = await this.categoriesService.getCategoryByTitle(title);
-    if (!category) {
-      throw new NotFoundException(`Category with title "${title}" not found`);
+  async getCategoryByTitle(
+    @Param('title') title: string,
+    @Query('order') order: 'asc' | 'desc' = 'asc',
+  ): Promise<Category> {
+    try {
+      return await this.categoriesService.getCategoryByTitle(title, order);  
+    } catch (error) {
+      throw new NotFoundException(error.message);
     }
-    return category;
   }
 
   @Get(':title/three-images')
@@ -61,17 +72,33 @@ export class CategoriesController {
     }
   }
 
+  @Patch(':title')
+  async updateCategoryTitle(
+    @Param('title') title: string,
+    @Body() updateCategoryDto: UpdateCategoryDto,
+  ): Promise<Category> {
+    return this.categoriesService.updateCategoryTitle(title, updateCategoryDto);
+  }
+
   @Delete(':title/image/:imageId')
-  async removeImageFromCategory(
+  async deleteImageFromCategory(
     @Param('title') title: string,
     @Param('imageId') imageId: string,
   ) {
     try {
-      return await this.categoriesService.removeImageFromCategory(title, imageId);
+      return await this.categoriesService.deleteImageFromCategory(
+        title,
+        imageId,
+      );
     } catch (error) {
       throw new InternalServerErrorException(
         `Error while removing image from category "${title}": ${error.message}`,
       );
     }
+  }
+
+  @Delete(':title')
+  async deleteCategory(@Param('title') title: string) {
+    return await this.categoriesService.deleteCategory(title);
   }
 }

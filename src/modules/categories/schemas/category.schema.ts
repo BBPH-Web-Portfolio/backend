@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { Image } from '../../images/schemas/images.schema';
 
 export type CategoryDocument = Category & Document;
 
@@ -10,7 +9,7 @@ export class Category {
   title: string;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Image' }] })
-  images: Types.Array<Image>;
+  images: Types.Array<Types.ObjectId>;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);

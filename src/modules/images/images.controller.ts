@@ -58,7 +58,7 @@ export class ImagesController {
   }
 
   @Delete(':id')
-  async deleteImage(@Param('id') id: string): Promise<Image> {
+  async deleteImage(@Param('id') id: string) {
     return this.imagesService.deleteImage(id);
   }
 }

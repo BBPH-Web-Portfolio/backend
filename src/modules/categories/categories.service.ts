@@ -5,12 +5,15 @@ import { Category, CategoryDocument } from './schemas/category.schema';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { ImagesService } from '../images/images.service';
 import { Image, ImageDocument } from '../images/schemas/images.schema';
-import { CreateImageDto } from '../images/dto/create-image.dto';
+import { CreateImageInCategoryDto } from './dto/create-image-in-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
+import { alt } from 'joi';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
+    @InjectModel(Image.name) private imageModel: Model<ImageDocument>,
     private imagesService: ImagesService,
   ) {}
 
@@ -27,14 +30,18 @@ export class CategoriesService {
   async addImageToCategory(
     title: string,
     file: Express.Multer.File,
-    createImageDto: CreateImageDto,
-  ): Promise<Category> {
+    createImageInCategoryDto: CreateImageInCategoryDto,
+  ): Promise<Image> {
     const category = await this.categoryModel.findOne({ title }).exec();
     if (!category) {
       throw new NotFoundException(`Category with title "${title}" not found`);
     }
 
-    const modifiedCreateImageDto = { ...createImageDto, section: 'gallery' };
+    const modifiedCreateImageDto = {
+      ...createImageInCategoryDto,
+      section: 'gallery',
+      subsection: title,
+    };
 
     const newImage = (await this.imagesService.createImage(
       file,
@@ -42,20 +49,26 @@ export class CategoriesService {
     )) as ImageDocument;
 
     category.images.push(newImage._id);
-    return await category.save();
+    await category.save();
+    return newImage;
   }
 
-  async getCategoryByTitle(title: string): Promise<Category> {
+  async getCategoryByTitle(
+    title: string,
+    order: 'asc' | 'desc' = 'asc',
+  ): Promise<Category> {
     const category = await this.categoryModel
       .findOne({ title })
       .populate({
         path: 'images',
-        model: 'Image',
+        options: { sort: { updatedAt: order === 'asc' ? 1 : -1 } },
       })
       .exec();
+
     if (!category) {
       throw new NotFoundException(`Category with title "${title}" not found`);
     }
+
     return category;
   }
 
@@ -64,20 +77,41 @@ export class CategoriesService {
       .findOne({ title })
       .populate('images')
       .exec();
+
     if (!category) {
       throw new NotFoundException(`Category with title "${title}" not found`);
     }
 
     const images = category.images.sort(() => Math.random() - 0.5).slice(0, 3);
-    const imageIds = (images as ImageDocument[]).map((image) => image._id);
+    const imageIds = (images as unknown as ImageDocument[]).map((image) => image._id);
 
     return await this.imagesService.findAll({ _id: { $in: imageIds } });
+    // return images
   }
 
-  async removeImageFromCategory(
-    title: string,
-    imageId: string,
+  async updateCategoryTitle(
+    oldTitle: string,
+    updateCategoryDto: UpdateCategoryDto,
   ): Promise<Category> {
+    const category = await this.categoryModel
+      .findOne({ title: oldTitle })
+      .exec();
+    if (!category) {
+      throw new NotFoundException(
+        `Category with title "${oldTitle}" not found`,
+      );
+    }
+
+    category.title = updateCategoryDto.title;
+
+    await this.imageModel.updateMany(
+      { _id: { $in: category.images } },
+      { subsection: updateCategoryDto.title },
+    );
+    return await category.save();
+  }
+
+  async deleteImageFromCategory(title: string, imageId: string) {
     const category = await this.categoryModel.findOne({ title }).exec();
     if (!category) {
       throw new NotFoundException(`Category with title "${title}" not found`);
@@ -92,10 +126,24 @@ export class CategoriesService {
       );
     }
 
-    await this.imagesService.deleteImage(imageId);
-
+    const result = await this.imagesService.deleteImage(imageId);
     category.images.splice(imageIndex, 1);
+    await category.save();
+    return result;
+  }
 
-    return await category.save();
+  async deleteCategory(
+    title: string,
+  ): Promise<{ deletedId: string; message: string }> {
+    const category = await this.categoryModel.findOne({ title }).exec();
+    if (!category) {
+      throw new NotFoundException(`Category with title "${title}" not found`);
+    }
+    await this.imageModel.deleteMany({ subsection: title }).exec();
+    await this.categoryModel.deleteOne({ title }).exec();
+    return {
+      deletedId: category._id.toString(),
+      message: 'Category and all associated images deleted successfully',
+    };
   }
 }
