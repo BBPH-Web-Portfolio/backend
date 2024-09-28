@@ -1,6 +1,11 @@
-import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { Image, ImageDocument } from './schemas/images.schema';
 import { CreateImageDto } from './dto/create-image.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
@@ -25,8 +30,8 @@ export class ImagesService {
     }
 
     if (file.size > envs.maxFileSize) {
-    throw new BadRequestException('File size exceeds the limit');
-  }
+      throw new BadRequestException('File size exceeds the limit');
+    }
 
     let uploadResult;
     try {
@@ -63,19 +68,29 @@ export class ImagesService {
     return await this.imageModel.find({ section }).exec();
   }
 
-  async findAll(): Promise<Image[]> {
-    return await this.imageModel.find();
+  async findAll(filter: FilterQuery<ImageDocument> = {}): Promise<Image[]> {
+    return await this.imageModel.find(filter);
   }
 
-  async updateImage(imageId: string, file?: Express.Multer.File, updateImageDto?: UpdateImageDto): Promise<Image> {
-    const { section, subsection, alt, width, height, link } = updateImageDto || {};
+  async updateImage(
+    imageId: string,
+    file?: Express.Multer.File,
+    updateImageDto?: UpdateImageDto,
+  ): Promise<Image> {
+    const { section, subsection, alt, width, height, link } =
+      updateImageDto || {};
 
     const existingImage = await this.imageModel.findById(imageId);
     if (!existingImage)
       throw new NotFoundException(`Image with ID ${imageId} not found`);
 
     if (file) {
-      if ((existingImage.width && existingImage.height) && (width != 0 && height != 0)) {
+      if (
+        existingImage.width &&
+        existingImage.height &&
+        width != 0 &&
+        height != 0
+      ) {
         const { width: fileWidth, height: fileHeight } =
           await this.cloudinaryService.getImageDimensions(file);
         if (
@@ -117,8 +132,8 @@ export class ImagesService {
         );
       }
     } else {
-        if (width !== undefined) existingImage.width = width;
-        if (height !== undefined) existingImage.height = height;
+      if (width !== undefined) existingImage.width = width;
+      if (height !== undefined) existingImage.height = height;
     }
 
     if (section !== undefined) existingImage.section = section;
@@ -129,7 +144,9 @@ export class ImagesService {
     return await existingImage.save();
   }
 
-  async deleteImage(imageId: string): Promise<Image> {
+  async deleteImage(
+    imageId: string,
+  ) {
     const image = await this.imageModel.findById(imageId);
     if (!image) {
       throw new NotFoundException(`Image with ID ${imageId} not found`);
@@ -145,6 +162,6 @@ export class ImagesService {
       );
     }
 
-    return await this.imageModel.findByIdAndDelete(imageId);
+    return await this.imageModel.deleteOne({ imageId });
   }
 }
