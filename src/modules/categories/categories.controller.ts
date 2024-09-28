@@ -19,6 +19,7 @@ import { Image } from '../images/schemas/images.schema';
 import { CreateImageInCategoryDto } from './dto/create-image-in-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category } from './schemas/category.schema';
+import { Order } from 'src/constants/constants';
 
 @Controller('categories')
 export class CategoriesController {
@@ -52,10 +53,10 @@ export class CategoriesController {
   @Get(':title')
   async getCategoryByTitle(
     @Param('title') title: string,
-    @Query('order') order: 'asc' | 'desc' = 'asc',
-  ): Promise<Category> {
+    @Query('order') order: Order = Order.ASC,
+  ){
     try {
-      return await this.categoriesService.getCategoryByTitle(title, order);  
+      return await this.categoriesService.getCategoryByTitle(title, order);
     } catch (error) {
       throw new NotFoundException(error.message);
     }

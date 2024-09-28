@@ -7,7 +7,7 @@ import { ImagesService } from '../images/images.service';
 import { Image, ImageDocument } from '../images/schemas/images.schema';
 import { CreateImageInCategoryDto } from './dto/create-image-in-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { alt } from 'joi';
+import { Order } from 'src/constants/constants';
 
 @Injectable()
 export class CategoriesService {
@@ -43,25 +43,24 @@ export class CategoriesService {
       subsection: title,
     };
 
-    const newImage = (await this.imagesService.createImage(
+    const newImage: any = await this.imagesService.createImage(
       file,
       modifiedCreateImageDto,
-    )) as ImageDocument;
+    );
 
     category.images.push(newImage._id);
     await category.save();
     return newImage;
   }
 
-  async getCategoryByTitle(
-    title: string,
-    order: 'asc' | 'desc' = 'asc',
-  ): Promise<Category> {
+  async getCategoryByTitle(title: string, order: Order): Promise<Category> {
+    console.log(order);
+
     const category = await this.categoryModel
       .findOne({ title })
       .populate({
         path: 'images',
-        options: { sort: { updatedAt: order === 'asc' ? 1 : -1 } },
+        options: { sort: { updatedAt: order === Order.ASC ? 1 : -1 } },
       })
       .exec();
 
@@ -83,7 +82,9 @@ export class CategoriesService {
     }
 
     const images = category.images.sort(() => Math.random() - 0.5).slice(0, 3);
-    const imageIds = (images as unknown as ImageDocument[]).map((image) => image._id);
+    const imageIds = (images as unknown as ImageDocument[]).map(
+      (image) => image._id,
+    );
 
     return await this.imagesService.findAll({ _id: { $in: imageIds } });
     // return images

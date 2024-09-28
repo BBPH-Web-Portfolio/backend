@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
+import { Category } from 'src/modules/categories/schemas/category.schema';
 
 export type ImageDocument = Image & Document;
 
