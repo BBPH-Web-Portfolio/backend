@@ -162,6 +162,6 @@ export class ImagesService {
       );
     }
 
-    return await this.imageModel.deleteOne({ imageId });
+    return await this.imageModel.deleteOne({ _id: imageId }).exec();
   }
 }

@@ -54,8 +54,6 @@ export class CategoriesService {
   }
 
   async getCategoryByTitle(title: string, order: Order): Promise<Category> {
-    console.log(order);
-
     const category = await this.categoryModel
       .findOne({ title })
       .populate({
@@ -87,7 +85,6 @@ export class CategoriesService {
     );
 
     return await this.imagesService.findAll({ _id: { $in: imageIds } });
-    // return images
   }
 
   async updateCategoryTitle(
@@ -109,7 +106,13 @@ export class CategoriesService {
       { _id: { $in: category.images } },
       { subsection: updateCategoryDto.title },
     );
-    return await category.save();
+    await category.save();
+
+    const updatedCategory = await this.categoryModel
+    .findOne({ title: updateCategoryDto.title })
+    .populate('images')
+    .exec();
+    return updatedCategory
   }
 
   async deleteImageFromCategory(title: string, imageId: string) {
