@@ -42,6 +42,11 @@ export class ImagesController {
     return await this.imagesService.findImagesBySection(section);
   }
 
+  @Get('random/:section')
+  async getRandomImageBySection(@Param('section') section: string,): Promise<Image> {
+  return this.imagesService.getRandomImageBySection(section);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Image> {
     return this.imagesService.findOne(id);

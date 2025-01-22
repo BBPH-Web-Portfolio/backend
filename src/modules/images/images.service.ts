@@ -72,52 +72,46 @@ export class ImagesService {
     return await this.imageModel.find(filter);
   }
 
-  async updateImage(
-    imageId: string,
-    file?: Express.Multer.File,
-    updateImageDto?: UpdateImageDto,
-  ): Promise<Image> {
-    const { section, subsection, alt, width, height, link } =
-      updateImageDto || {};
+  async getRandomImageBySection(section: string): Promise<Image> {
+    const images = await this.imageModel.find({ section }).exec();
+  
+    if (!images || images.length === 0) {
+      throw new NotFoundException(`No images found in section "${section}"`);
+    }
+  
+    const randomIndex = Math.floor(Math.random() * images.length);
+    return images[randomIndex];
+  }
+  
+  async updateImage(imageId: string, file?: Express.Multer.File, updateImageDto?: UpdateImageDto): Promise<Image> {
+    const { section, subsection, alt, width, height, link } = updateImageDto || {};
 
     const existingImage = await this.imageModel.findById(imageId);
     if (!existingImage)
       throw new NotFoundException(`Image with ID ${imageId} not found`);
 
     if (file) {
-      if (
-        existingImage.width &&
-        existingImage.height &&
-        width != 0 &&
-        height != 0
-      ) {
-        const { width: fileWidth, height: fileHeight } =
-          await this.cloudinaryService.getImageDimensions(file);
-        if (
-          fileWidth != existingImage.width ||
-          fileHeight != existingImage.height
-        ) {
-          throw new BadRequestException(
-            'New image dimensions do not match the required size',
-          );
+      if (existingImage.width && existingImage.height && width != 0 && height != 0) {
+        const { width: fileWidth, height: fileHeight } = await this.cloudinaryService.getImageDimensions(file);
+
+        const existingAspectRatio = existingImage.width / existingImage.height;
+        const newAspectRatio = fileWidth / fileHeight;
+
+        if (Math.abs(existingAspectRatio - newAspectRatio) > 0.01) {
+          throw new BadRequestException(`New image aspect ratio (${newAspectRatio}) does not match the existing (${existingAspectRatio})`);
         }
       }
 
       let uploadResult;
       try {
-        uploadResult =
-          await this.cloudinaryService.uploadImageToCloudinary(file);
+        uploadResult = await this.cloudinaryService.uploadImageToCloudinary(file);
       } catch (error) {
-        throw new InternalServerErrorException(
-          'Failed to upload new image to Cloudinary',
-        );
+        throw new InternalServerErrorException('Failed to upload new image to Cloudinary');
       }
 
       if (uploadResult && uploadResult.url) {
         try {
-          await this.cloudinaryService.deleteImageFromCloudinary(
-            existingImage.cloudinary_public_id,
-          );
+          await this.cloudinaryService.deleteImageFromCloudinary(existingImage.cloudinary_public_id);
         } catch (error) {
           console.error('Failed to delete old image from Cloudinary:', error);
         }
@@ -127,13 +121,11 @@ export class ImagesService {
         existingImage.width = uploadResult.width;
         existingImage.height = uploadResult.height;
       } else {
-        throw new InternalServerErrorException(
-          'Upload result from Cloudinary is invalid',
-        );
+        throw new InternalServerErrorException('Upload result from Cloudinary is invalid');
       }
     } else {
-      if (width !== undefined) existingImage.width = width;
-      if (height !== undefined) existingImage.height = height;
+      if (width !== undefined && width > 0) existingImage.width = width;
+      if (height !== undefined && height > 0) existingImage.height = height;
     }
 
     if (section !== undefined) existingImage.section = section;
@@ -144,9 +136,7 @@ export class ImagesService {
     return await existingImage.save();
   }
 
-  async deleteImage(
-    imageId: string,
-  ) {
+  async deleteImage(imageId: string) {
     const image = await this.imageModel.findById(imageId);
     if (!image) {
       throw new NotFoundException(`Image with ID ${imageId} not found`);
